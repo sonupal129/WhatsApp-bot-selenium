@@ -16,7 +16,7 @@ from messages import get_all_message_templates
 
 # function to read contacts from a text file
 
-print("Fetching contacts details from contacts.xlsx")
+print("Fetching contacts details from sheet")
 print("..................")
 
 time.sleep(5)
@@ -61,7 +61,7 @@ attachment_image = "/home/sonu/Documents/lventer/whatsapp_senders/wbot/WhatsApp-
 # #link to open a site
 whatsapp_url = f"https://web.whatsapp.com"
 driver.get(whatsapp_url)
-time.sleep(20)
+time.sleep(60)
 
 def get_message(**kwargs):
     all_templates = get_all_message_templates()
@@ -71,6 +71,7 @@ def get_message(**kwargs):
         message = all_templates["LAVANYA_ENGLISH"]
     return message.format(**kwargs)
 
+message_not_sent = []
 
 for contact in contacts:
     phone_number = contact["phone"]
@@ -82,7 +83,7 @@ for contact in contacts:
         search_box.click()
         search_box.send_keys(phone_number)
         search_box.send_keys(Keys.RETURN)
-        time.sleep(2)  # Wait for chat to open
+        time.sleep(4)  # Wait for chat to open
 
         # Find the message input box and send the message
         print("Writing Message.........")
@@ -96,7 +97,7 @@ for contact in contacts:
             message_box.send_keys(Keys.SHIFT + Keys.ENTER)
         message_box.send_keys(Keys.RETURN)  # Send the message
 
-        time.sleep(2)  # Wait a bit for the message to be sent
+        time.sleep(4)  # Wait a bit for the message to be sent
 
         if attachment_image and os.path.exists(attachment_image):
             attach_button = driver.find_element(By.XPATH, '//div[@title="Attach"]')
@@ -111,8 +112,12 @@ for contact in contacts:
         # Send message
         print("Message sent to the user")
     except Exception as e:
+            message_not_sent.append(phone_number)
             print(f"An error occurred with {contact}: {e}")
 
 time.sleep(20)
+
+print("This is list of peoples to who messages could not sent")
+print(message_not_sent)
 
 driver.quit()

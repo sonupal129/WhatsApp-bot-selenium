@@ -4,29 +4,26 @@ def get_all_message_templates():
     return messages
 
 
-LAVANYA_ENGLISH = """Hi {name},
+LAVANYA_ENGLISH = """Hello {name},
 
-                        Thank you for your inquiry on {enquiry_from}! 
+We received your inquiry on {enquiry_from} that you are looking for soft toys and kids school bags.
 
-                        I'm Sonpal from Lavanya Enterprises, based in New Delhi. We manufacture high-quality soft toys, plush toys, and kids' soft school bags. With 15+ years of experience, we ensure premium products that kids love!
+I am Sonpal from Lavanya Enterprises, based in New Delhi. We are a manufacturer of high quality soft toys, plush toys, and kids school bags. With 15+ years of experience, we make sure that our products are loved by kids!
 
-                        We saw your interest and would love to know more about your requirements. Whether you need standard items or custom designs, we're here to help. Our prices start from just ₹40 INR, making our products affordable and attractive.
+We also manufacture standard items or custom designs. Our product prices start from ₹40 INR, which makes our products affordable and attractive.
 
-                        Check out our product catalog here: 
+Our products catalogue can be viewed by visiting the link given below:
 
-                        https://drive.google.com/drive/folders/1agZlGtJW84CiZu6kG_xcINo3O_YyAmBg?usp=sharing
+https://drive.google.com/drive/folders/1agZlGtJW84CiZu6kG_xcINo3O_YyAmBg?usp=sharing
 
-                        Visit our website: 
+You can also contact us from our website:
 
-                        www.lavanyacrafts.com
+www.lavanyacrafts.com
 
-                        Let's discuss further! Feel free to reply here, or call/WhatsApp me at +91 8882897947.
+You can reply here, or call/whatsapp me on +91 8882897947.
 
-                        Looking forward to connecting with you!
-
-                        Best regards,  
-                        Son Pal
-                        Lavanya Enterprises
+Sonpal
+Lavanya Enterprises
 """
 
 
