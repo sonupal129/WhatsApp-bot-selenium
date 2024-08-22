@@ -12,7 +12,7 @@ from selenium.webdriver.common.by import By
 import datetime, time, os
 import openpyxl as excel
 import urllib.parse
-from messages import LAVANYA_ENGLISH, LAVANYA_HINDI
+from messages import get_all_message_templates
 
 # function to read contacts from a text file
 
@@ -58,20 +58,17 @@ driver = webdriver.Chrome(service= cService, options=cOptions)
 attachment_image = "/home/sonu/Documents/lventer/whatsapp_senders/wbot/WhatsApp-bot-selenium/Lavanya Enterprises.png"
 
 
-# dummy
-encoded_message = urllib.parse.quote(LAVANYA_ENGLISH)
-
-
 # #link to open a site
 whatsapp_url = f"https://web.whatsapp.com"
 driver.get(whatsapp_url)
 time.sleep(20)
 
 def get_message(**kwargs):
-    if kwargs.get("state") not in ["UP", "Haryana", "Gujarat", "Pubjab", "Bihar", "Rajasthan", "MP", "Delhi"]:
-        message = LAVANYA_ENGLISH
+    all_templates = get_all_message_templates()
+    if  kwargs.get("template_name"):
+        message = all_templates[kwargs["template_name"]]
     else:
-        message = LAVANYA_HINDI
+        message = all_templates["LAVANYA_ENGLISH"]
     return message.format(**kwargs)
 
 
@@ -79,7 +76,7 @@ for contact in contacts:
     phone_number = contact["phone"]
     print(contact)
     try:
-        time.sleep(10)
+        time.sleep(20)
         # Find the search box and search for the contact
         search_box = driver.find_element(By.XPATH, '//div[@contenteditable="true"][@data-tab="3"]')
         search_box.click()
