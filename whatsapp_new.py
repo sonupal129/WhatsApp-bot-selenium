@@ -50,13 +50,22 @@ def validateContacts():
 contacts = validateContacts()
 
 # Driver to open a browser
-cService = webdriver.ChromeService(executable_path="/usr/bin/chromedriver")
+cService = webdriver.ChromeService(executable_path="/home/sonu/Documents/SONU_LEARN/whatsapp_bot/WhatsApp-bot-selenium/driver/chromedriver-linux64/chromedriver")
 cOptions = webdriver.ChromeOptions()
 cOptions.add_argument("--user-data-dir=chrome-data")
 driver = webdriver.Chrome(service= cService, options=cOptions)
 
-attachment_image = "/home/sonu/Documents/lventer/whatsapp_senders/wbot/WhatsApp-bot-selenium/Lavanya Enterprises.png"
 
+attachment_files = [
+    "/home/sonu/Documents/SONU_LEARN/whatsapp_bot/WhatsApp-bot-selenium/Lavanya Enterprises.png",
+    "/home/sonu/Documents/SONU_LEARN/whatsapp_bot/WhatsApp-bot-selenium/HMAPISKL0001_02_DTL.png",
+    "/home/sonu/Documents/SONU_LEARN/whatsapp_bot/WhatsApp-bot-selenium/HMAPISKL0002_01_DTL.png",
+    "/home/sonu/Documents/SONU_LEARN/whatsapp_bot/WhatsApp-bot-selenium/HMAPISKL0003_01_DTL.png",
+    "/home/sonu/Documents/SONU_LEARN/whatsapp_bot/WhatsApp-bot-selenium/HMAPISKL0004_01_DTL.png",
+    # "/home/sonu/Documents/SONU_LEARN/whatsapp_bot/WhatsApp-bot-selenium/catalog.pdf",
+]
+
+attachment = "/home/sonu/Documents/SONU_LEARN/whatsapp_bot/WhatsApp-bot-selenium/Lavanya Enterprises.png"
 
 # #link to open a site
 whatsapp_url = f"https://web.whatsapp.com"
@@ -70,6 +79,8 @@ def get_message(**kwargs):
     else:
         message = all_templates["LAVANYA_ENGLISH"]
     return message.format(**kwargs)
+
+
 
 message_not_sent = []
 
@@ -99,21 +110,41 @@ for contact in contacts:
 
         time.sleep(4)  # Wait a bit for the message to be sent
 
-        if attachment_image and os.path.exists(attachment_image):
-            attach_button = driver.find_element(By.XPATH, '//div[@title="Attach"]')
-            attach_button.click()
-            time.sleep(3)  # Wait for the attach menu to open
-            photo_input = driver.find_element(By.XPATH, '//input[@accept="image/*,video/mp4,video/3gpp,video/quicktime"]')
-            photo_input.send_keys(attachment_image)
-            time.sleep(5)  # Wait for the photo to upload
+        if attachment_files:
+            existing_files = [f for f in attachment_files if os.path.exists(f)]
+            if existing_files:
+                attach_button = driver.find_element(By.XPATH, '//button[@title="Attach"]')
+                attach_button.click()
+                time.sleep(2)  # Wait for the attach menu to open
+
+                # For images, videos, and some other formats (PDF might not work here)
+                photo_input = driver.find_element(By.XPATH, '//input[@accept="image/*,video/mp4,video/3gpp,video/quicktime"]')
+
+                # Join paths with newline character
+                photo_input.send_keys('\n'.join(existing_files))
+                time.sleep(8)  # Wait longer if files are big or multiple
+
         # Send message
         send_button = driver.find_element(By.XPATH, '//span[@data-icon="send"]')
         send_button.click()
-        # Send message
         print("Message sent to the user")
     except Exception as e:
             message_not_sent.append(phone_number)
             print(f"An error occurred with {contact}: {e}")
+
+    # Optional: Send catalog link after sending attachments
+    catalog_link = "https://wa.me/c/918882897947"  # Replace with your actual link
+    try:
+        time.sleep(2)  # Brief wait before sending the next message
+        message_box = driver.find_element(By.XPATH, '//div[@contenteditable="true"][@data-tab="10"]')
+        message_box.click()
+        message_box.send_keys("Check out our full catalog here:")
+        message_box.send_keys(Keys.SHIFT + Keys.ENTER)
+        message_box.send_keys(catalog_link)
+        message_box.send_keys(Keys.RETURN)
+        print("Catalog link sent.")
+    except Exception as e:
+        print(f"Could not send catalog link: {e}")
 
 time.sleep(20)
 
