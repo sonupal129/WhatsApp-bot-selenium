@@ -4,6 +4,10 @@
 
 # Import required packages
 from selenium import webdriver
+from selenium.webdriver.chrome.service import Service
+from selenium.webdriver.chrome.options import Options
+from webdriver_manager.chrome import ChromeDriverManager
+import os
 import phonenumbers
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
@@ -50,11 +54,26 @@ def validateContacts():
 contacts = validateContacts()
 
 # Driver to open a browser
-cService = webdriver.ChromeService(executable_path="/home/sonu/Documents/SONU_LEARN/whatsapp_bot/WhatsApp-bot-selenium/driver/chromedriver-linux64/chromedriver")
-cOptions = webdriver.ChromeOptions()
-cOptions.add_argument("--user-data-dir=chrome-data")
-driver = webdriver.Chrome(service= cService, options=cOptions)
+# ---------- CHROME OPTIONS ----------
+chrome_options = Options()
 
+# Persist WhatsApp session
+SESSION_DIR = os.path.abspath("whatsapp-session")
+chrome_options.add_argument(f"--user-data-dir={SESSION_DIR}")
+
+# Recommended stability flags
+chrome_options.add_argument("--no-sandbox")
+chrome_options.add_argument("--disable-dev-shm-usage")
+chrome_options.add_argument("--disable-notifications")
+chrome_options.add_argument("--start-maximized")
+
+# ---------- AUTO DRIVER SETUP ----------
+service = Service(ChromeDriverManager().install())
+
+driver = webdriver.Chrome(
+    service=service,
+    options=chrome_options
+)
 
 attachment_files = [
     "/home/sonu/Documents/SONU_LEARN/whatsapp_bot/WhatsApp-bot-selenium/Lavanya Enterprises.png",
@@ -62,10 +81,10 @@ attachment_files = [
     "/home/sonu/Documents/SONU_LEARN/whatsapp_bot/WhatsApp-bot-selenium/HMAPISKL0002_01_DTL.png",
     "/home/sonu/Documents/SONU_LEARN/whatsapp_bot/WhatsApp-bot-selenium/HMAPISKL0003_01_DTL.png",
     "/home/sonu/Documents/SONU_LEARN/whatsapp_bot/WhatsApp-bot-selenium/HMAPISKL0004_01_DTL.png",
-    # "/home/sonu/Documents/SONU_LEARN/whatsapp_bot/WhatsApp-bot-selenium/catalog.pdf",
+    
 ]
 
-attachment = "/home/sonu/Documents/SONU_LEARN/whatsapp_bot/WhatsApp-bot-selenium/Lavanya Enterprises.png"
+pdf_catalog = "/home/sonu/Documents/SONU_LEARN/whatsapp_bot/WhatsApp-bot-selenium/catalog.pdf",
 
 # #link to open a site
 whatsapp_url = f"https://web.whatsapp.com"
@@ -113,19 +132,32 @@ for contact in contacts:
         if attachment_files:
             existing_files = [f for f in attachment_files if os.path.exists(f)]
             if existing_files:
-                attach_button = driver.find_element(By.XPATH, '//button[@title="Attach"]')
+                attach_button = WebDriverWait(driver, 20).until(
+                                    EC.element_to_be_clickable(
+                                        (By.XPATH, '//button[@aria-label="Attach"]')
+                                    )
+                                )
                 attach_button.click()
                 time.sleep(2)  # Wait for the attach menu to open
 
-                # For images, videos, and some other formats (PDF might not work here)
-                photo_input = driver.find_element(By.XPATH, '//input[@accept="image/*,video/mp4,video/3gpp,video/quicktime"]')
+                # Wait for file input
+                file_input = WebDriverWait(driver, 20).until(
+                    EC.presence_of_element_located(
+                        (By.XPATH, '//input[@type="file"]')
+                    )
+                )
 
-                # Join paths with newline character
-                photo_input.send_keys('\n'.join(existing_files))
-                time.sleep(8)  # Wait longer if files are big or multiple
+                # Send files (images/videos)
+                file_input.send_keys("\n".join(existing_files))
+
+                time.sleep(10)  # Allow upload preview to load
 
         # Send message
-        send_button = driver.find_element(By.XPATH, '//span[@data-icon="send"]')
+        send_button = WebDriverWait(driver, 20).until(
+                        EC.element_to_be_clickable(
+                            (By.XPATH, '//button[@aria-label="Send"] | //span[@data-icon="send"]')
+                        )
+                    )
         send_button.click()
         print("Message sent to the user")
     except Exception as e:

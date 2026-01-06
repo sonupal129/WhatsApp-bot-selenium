@@ -6,24 +6,24 @@ def get_all_message_templates():
 
 LAVANYA_ENGLISH = """Hello {name},
 
-We received your inquiry on {enquiry_from} that you are looking for soft toys and kids school bags.
+Greetings from LaviPro : Lavanya Enterprises!
+Thank you for showing interest in our Electric Insect Killer products on TradeIndia.
 
-I am Sonpal from Lavanya Enterprises, based in New Delhi. We are a manufacturer of high quality soft toys, plush toys, and kids school bags. With 15+ years of experience, we make sure that our products are loved by kids!
+We manufacture high-quality, durable, and eco-friendly insect killers designed for homes, offices, restaurants, and outdoor spaces.
+** Available in 1 ft, 1.25 ft, 1.5 ft & 2 ft sizes
+** Powerful UV Tubes (20W-40W)
+** Chemical-Free | Metal Body | 1-Year Warranty
+** MOQ: 10 Units | Special prices for bulk orders
 
-We also manufacture standard items or custom designs. Our product prices start from ₹40 INR, which makes our products affordable and attractive.
+You can explore all our products at:
+www.lavanyaent.com
 
-Our products catalogue can be viewed by visiting the link given below:
+Please let us know your requirements or if you would like a quote. We'd love to assist you further!
 
-https://drive.google.com/drive/folders/1agZlGtJW84CiZu6kG_xcINo3O_YyAmBg?usp=sharing
-
-You can also contact us from our website:
-
-www.lavanyacrafts.com
-
-You can reply here, or call/whatsapp me on +91 8882897947.
-
-Sonpal
-Lavanya Enterprises
+Thanks & Regards,
+Son Pal
++91 8882897947
+Lavanya Enterprises | Brand: LaviPro
 """
 
 
