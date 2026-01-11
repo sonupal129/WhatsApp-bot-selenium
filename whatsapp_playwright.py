@@ -3,6 +3,7 @@ import os
 import logging
 import openpyxl as excel
 import json
+import argparse
 from datetime import date
 from playwright.sync_api import sync_playwright
 from messages import get_all_message_templates
@@ -41,16 +42,21 @@ def readSheet(fileName):
     wb = excel.load_workbook(fileName)
     sheet = wb.worksheets[0]
 
-    headers = [
-        cell.value.lower().replace(" ", "_")
-        for cell in next(sheet.iter_rows())
-    ]
+    raw_headers = next(sheet.iter_rows())
+    headers = []
+
+    for idx, cell in enumerate(raw_headers, start=1):
+        if cell.value is None:
+            headers.append(f"_unused_{idx}")  # placeholder
+        else:
+            headers.append(cell.value.lower().replace(" ", "_"))
 
     data = []
 
-    for idx, row in enumerate(sheet.iter_rows(min_row=2), start=2):
+    for row_idx, row in enumerate(sheet.iter_rows(min_row=2), start=2):
         values = [cell.value for cell in row]
 
+        # Skip fully empty rows
         if all(value is None for value in values):
             continue
 
@@ -60,13 +66,22 @@ def readSheet(fileName):
         if phone is None or str(phone).strip() == "":
             continue
 
-        # Attach row number for write-back
-        row_dict["_row"] = idx
-
+        row_dict["_row"] = row_idx
         data.append(row_dict)
 
-    logging.info(f"Loaded {len(data)} total rows")
+    logging.info(f"Loaded {len(data)} valid contacts")
     return data
+
+def get_daily_limit_from_args():
+    parser = argparse.ArgumentParser(description="WhatsApp Marketing Bot")
+    parser.add_argument(
+        "--limit",
+        type=int,
+        default=50,
+        help="Daily send limit (default: 50)"
+    )
+    args = parser.parse_args()
+    return args.limit
 
 
 def get_message(**kwargs):
@@ -123,14 +138,23 @@ def random_typing_delay():
     return random.randint(*TYPING_DELAY_RANGE)
 
 def ensure_status_columns(sheet):
-    headers = [cell.value.lower() for cell in sheet[1]]
+    headers = []
 
+    for idx, cell in enumerate(sheet[1], start=1):
+        if cell.value is None:
+            headers.append(f"_unused_{idx}")
+        else:
+            headers.append(str(cell.value).lower())
+
+    # Add "status" column if missing
     if "status" not in headers:
-        sheet.cell(row=1, column=len(headers) + 1).value = "status"
         headers.append("status")
+        sheet.cell(row=1, column=len(headers)).value = "status"
 
+    # Add "sent_at" column if missing
     if "sent_at" not in headers:
-        sheet.cell(row=1, column=len(headers) + 1).value = "sent_at"
+        headers.append("sent_at")
+        sheet.cell(row=1, column=len(headers)).value = "sent_at"
 
     return headers
 
@@ -160,7 +184,45 @@ def update_excel_status(
 
     wb.save(workbook_path)
 
+
+def open_chat_safely(page, phone):
+    logging.info(f"Opening chat for {phone}")
+
+    search_box = page.locator('div[contenteditable="true"][data-tab="3"]')
+    search_box.click()
+
+    page.keyboard.press("Control+A")
+    page.keyboard.press("Backspace")
+    time.sleep(0.3)
+
+    page.keyboard.type(phone, delay=random_typing_delay())
+    time.sleep(0.6)
+    page.keyboard.press("Enter")
+
+    # ✅ CRITICAL: wait until search box is cleared
+    page.wait_for_function(
+        """
+        () => {
+            const search = document.querySelector('div[data-tab="3"]');
+            return search && search.innerText.trim() === '';
+        }
+        """,
+        timeout=20000
+    )
+
+    # ✅ wait for chat input to be freshly focused
+    page.wait_for_selector(
+        'div[contenteditable="true"][data-tab="10"]',
+        state="visible",
+        timeout=20000
+    )
+
+    logging.info(f"Chat loaded safely for {phone}")
+
 def main():
+    DAILY_SEND_LIMIT = get_daily_limit_from_args()
+    logging.info(f"Daily send limit set to: {DAILY_SEND_LIMIT}")
+    
     contacts = readSheet("contacts.xlsx")
 
     daily_data = load_daily_limit()
@@ -197,6 +259,11 @@ def main():
             phone = str(contact["phone"])
             name = contact.get("name", "")
 
+            # Resume logic: skip already successful contacts
+            if contact.get("status") == "SUCCESS":
+                logging.info(f"Skipping already sent: {phone}")
+                continue
+
             if daily_data["sent_count"] >= DAILY_SEND_LIMIT:
                 logging.warning("Daily send limit reached. Stopping script.")
                 break
@@ -221,14 +288,32 @@ def main():
                     timeout=15000
                 )
 
+                random_sleep(*ACTION_PAUSE_RANGE)
+
                 # -------- SEND MESSAGE + PASTE ATTACHMENTS --------
                 message_box = page.locator(
                     'div[contenteditable="true"][data-tab="10"]'
                 )
                 message_box.click()
 
-                # Optional quick reply / command
-                page.keyboard.type("/newCustomer", delay=random_typing_delay())
+                # Message 1
+                page.keyboard.type("/marketingMessage1", delay=random_typing_delay())
+                random_sleep(*SHORT_PAUSE_RANGE)
+                page.keyboard.press("Tab")
+                random_sleep(*SHORT_PAUSE_RANGE)
+                page.keyboard.press("Enter")
+                random_sleep(*SHORT_PAUSE_RANGE)
+
+                # Message 2
+                page.keyboard.type("/marketingMessage2", delay=random_typing_delay())
+                random_sleep(*SHORT_PAUSE_RANGE)
+                page.keyboard.press("Tab")
+                random_sleep(*SHORT_PAUSE_RANGE)
+                page.keyboard.press("Enter")
+                random_sleep(*SHORT_PAUSE_RANGE)
+
+                # Message 3
+                page.keyboard.type("/marketingMessage3", delay=random_typing_delay())
                 random_sleep(*SHORT_PAUSE_RANGE)
                 page.keyboard.press("Tab")
                 random_sleep(*SHORT_PAUSE_RANGE)
@@ -242,15 +327,37 @@ def main():
                 time.sleep(5)  # Wait for preview
                 page.keyboard.press("Enter")
 
+                # Message 4
+                page.keyboard.type("/marketingMessage4", delay=random_typing_delay())
+                random_sleep(*SHORT_PAUSE_RANGE)
+                page.keyboard.press("Tab")
+                random_sleep(*SHORT_PAUSE_RANGE)
+                page.keyboard.press("Enter")
+                random_sleep(*SHORT_PAUSE_RANGE)
+
                 daily_data["sent_count"] += 1
                 save_daily_limit(daily_data)
 
+                update_excel_status(
+                    "contacts.xlsx",
+                    contact["_row"],
+                    "SUCCESS"
+                )
+
+                logging.info(f"SUCCESS: Message sent to {phone}")
                 logging.info(
                     f"SUCCESS: {phone} | Daily count: {daily_data['sent_count']} / {DAILY_SEND_LIMIT}"
                 )
                 random_sleep(*BETWEEN_CONTACTS_RANGE)
 
             except Exception as e:
+                update_excel_status(
+                            "contacts.xlsx",
+                            contact["_row"],
+                            "FAILED",
+                            timestamp=False
+                        )
+
                 logging.error(f"FAILED for {phone}: {e}")
                 failed.append(phone)
 

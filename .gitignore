@@ -5,3 +5,5 @@ chrome-data
 daily_limit.json
 logs/
 whatsapp-user-data/
+contacts.xlsx
+/.idea
